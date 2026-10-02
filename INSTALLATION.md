@@ -24,7 +24,7 @@ sudo bash scripts/install-server.sh
 
 Instalators pirms darbu sākšanas pārbauda `Python 3.11+`, `OpenSSL`, `systemd`, `curl` un `tar`. Ja kāda pakotne trūkst, tas nosauc pakotnes un prasa apstiprinājumu, pirms izmanto `apt-get` to uzstādīšanai. Instalators neveic neatgriezeniskas izmaiņas bez apstiprinājuma; esošu programmu vai HTTPS sertifikātu tas aizstāj tikai pēc atsevišķa jautājuma.
 
-Administrācijas parole tiek ievadīta divreiz bez rakstzīmju attēlošanas. Tā netiek nodota kā komandrindas parametrs un instalēšanas laikā netiek izvadīta terminālī. Pēc tam tā tiek glabāta tikai servera konfigurācijas failā `/etc/visitor-registry/visitor-registry.env` ar piekļuvi `root` un `visitorregistry` grupai. Nelietojiet instalatoru ar `bash -x`, nelīmējiet paroli biļetēs vai čatā un pēc pirmās pieslēgšanās nomainiet paroli, ja tā varēja būt atklāta.
+Administrācijas parole tiek ievadīta divreiz bez rakstzīmju attēlošanas, nedrīkst būt tukša un ir vismaz 12 simbolus gara. Tā netiek nodota kā komandrindas parametrs un instalēšanas laikā netiek izvadīta terminālī. Pēc tam tā tiek glabāta tikai servera konfigurācijas failā `/etc/visitor-registry/visitor-registry.env` ar piekļuvi `root` un `visitorregistry` grupai. Instalators pirms servisa palaišanas validē paroles un sesijas atslēgas klātbūtni, bet pēc palaišanas lokāli veic reālu administrācijas pieslēgšanās pārbaudi. Nelietojiet instalatoru ar `bash -x`, nelīmējiet paroli biļetēs vai čatā un pēc pirmās pieslēgšanās nomainiet paroli, ja tā varēja būt atklāta.
 
 Instalators jautā arī pārziņa juridisko nosaukumu, servera DNS vārdu un izvēlēto HTTPS sertifikāta veidu.
 

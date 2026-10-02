@@ -18,6 +18,8 @@ readonly SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}"
 
 script_file="$(readlink -f "${BASH_SOURCE[0]}")"
 source_directory="$(cd "$(dirname "$script_file")/.." && pwd)"
+script_invoked_directly=false
+[[ "${BASH_SOURCE[0]}" == "$0" ]] && script_invoked_directly=true
 temporary_files=()
 temporary_directories=()
 server_python=""
@@ -44,13 +46,14 @@ Instalators:
 EOF
 }
 
-if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
-  usage
-  exit 0
-fi
-
-if [[ "${EUID}" -ne 0 ]]; then
-  exec sudo -- "$script_file" "$@"
+if [[ "$script_invoked_directly" == true ]]; then
+  if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+    usage
+    exit 0
+  fi
+  if [[ "${EUID}" -ne 0 ]]; then
+    exec sudo -- "$script_file" "$@"
+  fi
 fi
 
 confirm() {
@@ -113,6 +116,7 @@ read_required() {
 }
 
 read_admin_password() {
+  local destination_name="$1"
   local first_password=""
   local second_password=""
   while true; do
@@ -120,6 +124,10 @@ read_admin_password() {
     printf '\n'
     IFS= read -r -s -p 'Atkārtojiet administrācijas paroli: ' second_password
     printf '\n'
+    if [[ -z "$first_password" ]]; then
+      printf 'Administrācijas parole nedrīkst būt tukša. Mēģiniet vēlreiz.\n' >&2
+      continue
+    fi
     if [[ "$first_password" != "$second_password" ]]; then
       printf 'Paroles nesakrīt. Mēģiniet vēlreiz.\n' >&2
       continue
@@ -128,7 +136,7 @@ read_admin_password() {
       printf 'Parolei jābūt vismaz 12 simbolus garai.\n' >&2
       continue
     fi
-    printf '%s' "$first_password"
+    printf -v "$destination_name" '%s' "$first_password"
     return
   done
 }
@@ -245,12 +253,60 @@ configure_certificate() {
 
 systemd_environment_value() {
   local value="$1"
-  [[ "$value" != *$'\n'* && "$value" != *$'\r'* ]] || { printf 'Konfigurācijas vērtībā nedrīkst būt rindas pārnesums.\n' >&2; exit 1; }
+  local destination_name="$2"
+  [[ "$value" != *$'\n'* && "$value" != *$'\r'* ]] || { printf 'Konfigurācijas vērtībā nedrīkst būt rindas pārnesums.\n' >&2; return 1; }
   value="${value//\\/\\\\}"
   value="${value//\"/\\\"}"
   value="${value//\$/\\\$}"
   value="${value//\`/\\\`}"
-  printf '"%s"' "$value"
+  printf -v "$destination_name" '"%s"' "$value"
+}
+
+generate_configuration_file() {
+  local configuration_file="$1"
+  local admin_password="$2"
+  local company_name="$3"
+  local session_secret
+  local database_value password_value secret_value company_value certificate_value private_key_value
+
+  [[ -n "$admin_password" ]] || { printf 'Administrācijas parole nav saņemta.\n' >&2; return 1; }
+  session_secret="$("$server_python" -c 'import secrets; print(secrets.token_urlsafe(48))')"
+  [[ -n "$session_secret" ]] || { printf 'Neizdevās izveidot sesijas atslēgu.\n' >&2; return 1; }
+
+  systemd_environment_value "${DATA_DIRECTORY}/visitor_registry.sqlite3" database_value || return 1
+  systemd_environment_value "$admin_password" password_value || return 1
+  systemd_environment_value "$session_secret" secret_value || return 1
+  systemd_environment_value "$company_name" company_value || return 1
+  systemd_environment_value "${CERTIFICATE_DIRECTORY}/server.crt" certificate_value || return 1
+  systemd_environment_value "${CERTIFICATE_DIRECTORY}/server.key" private_key_value || return 1
+  umask 077
+  {
+    printf 'VISITOR_REGISTRY_DB=%s\n' "$database_value"
+    printf 'VISITOR_REGISTRY_HOST=0.0.0.0\n'
+    printf 'VISITOR_REGISTRY_PORT=8443\n'
+    printf 'VISITOR_REGISTRY_ADMIN_PASSWORD=%s\n' "$password_value"
+    printf 'VISITOR_REGISTRY_SESSION_SECRET=%s\n' "$secret_value"
+    printf 'VISITOR_REGISTRY_COMPANY=%s\n' "$company_value"
+    printf 'VISITOR_REGISTRY_TIMEZONE=Europe/Riga\n'
+    printf 'VISITOR_REGISTRY_TLS_CERTIFICATE=%s\n' "$certificate_value"
+    printf 'VISITOR_REGISTRY_TLS_PRIVATE_KEY=%s\n' "$private_key_value"
+    printf 'VISITOR_REGISTRY_SECURE_COOKIES=true\n'
+    printf 'VISITOR_REGISTRY_RETENTION_SWEEP_SECONDS=3600\n'
+  } > "$configuration_file"
+}
+
+validate_configuration_file() {
+  local configuration_file="$1"
+  if ! grep -qE '^VISITOR_REGISTRY_ADMIN_PASSWORD=.+$' "$configuration_file" || \
+    grep -Fxq 'VISITOR_REGISTRY_ADMIN_PASSWORD=""' "$configuration_file"; then
+    printf 'Kļūda: administratora parole nav konfigurēta.\n' >&2
+    return 1
+  fi
+  if ! grep -qE '^VISITOR_REGISTRY_SESSION_SECRET=.+$' "$configuration_file" || \
+    grep -Fxq 'VISITOR_REGISTRY_SESSION_SECRET=""' "$configuration_file"; then
+    printf 'Kļūda: sesijas atslēga nav konfigurēta.\n' >&2
+    return 1
+  fi
 }
 
 write_configuration() {
@@ -259,20 +315,8 @@ write_configuration() {
   local temporary_config
   temporary_config="$(mktemp)"
   temporary_files+=("$temporary_config")
-  umask 077
-  {
-    printf 'VISITOR_REGISTRY_DB=%s\n' "$(systemd_environment_value "${DATA_DIRECTORY}/visitor_registry.sqlite3")"
-    printf 'VISITOR_REGISTRY_HOST=0.0.0.0\n'
-    printf 'VISITOR_REGISTRY_PORT=8443\n'
-    printf 'VISITOR_REGISTRY_ADMIN_PASSWORD=%s\n' "$(systemd_environment_value "$admin_password")"
-    printf 'VISITOR_REGISTRY_SESSION_SECRET=%s\n' "$(systemd_environment_value "$("$server_python" -c 'import secrets; print(secrets.token_urlsafe(48))')")"
-    printf 'VISITOR_REGISTRY_COMPANY=%s\n' "$(systemd_environment_value "$company_name")"
-    printf 'VISITOR_REGISTRY_TIMEZONE=Europe/Riga\n'
-    printf 'VISITOR_REGISTRY_TLS_CERTIFICATE=%s\n' "$(systemd_environment_value "${CERTIFICATE_DIRECTORY}/server.crt")"
-    printf 'VISITOR_REGISTRY_TLS_PRIVATE_KEY=%s\n' "$(systemd_environment_value "${CERTIFICATE_DIRECTORY}/server.key")"
-    printf 'VISITOR_REGISTRY_SECURE_COOKIES=true\n'
-    printf 'VISITOR_REGISTRY_RETENTION_SWEEP_SECONDS=3600\n'
-  } > "$temporary_config"
+  generate_configuration_file "$temporary_config" "$admin_password" "$company_name"
+  validate_configuration_file "$temporary_config"
   install -o root -g "$SERVICE_USER" -m 640 "$temporary_config" "$CONFIG_FILE"
 }
 
@@ -286,6 +330,28 @@ install_service() {
   systemctl daemon-reload
   systemctl enable --now "$SERVICE_NAME"
   systemctl is-active --quiet "$SERVICE_NAME"
+}
+
+verify_admin_login() {
+  local dns_name="$1"
+  local admin_password="$2"
+  local login_payload response_body http_status attempt
+  login_payload="$(mktemp)"
+  response_body="$(mktemp)"
+  temporary_files+=("$login_payload" "$response_body")
+  printf '%s' "$admin_password" | "$server_python" -c 'import json, sys; print(json.dumps({"password": sys.stdin.read()}))' > "$login_payload"
+
+  for attempt in {1..10}; do
+    http_status="$(curl --insecure --silent --show-error --output "$response_body" --write-out '%{http_code}' \
+      --header 'Content-Type: application/json' --request POST --data-binary "@${login_payload}" \
+      --resolve "${dns_name}:8443:127.0.0.1" "https://${dns_name}:8443/api/admin/login" || true)"
+    if [[ "$http_status" == "200" ]] && grep -qE '"ok"[[:space:]]*:[[:space:]]*true' "$response_body"; then
+      return 0
+    fi
+    sleep 1
+  done
+  printf 'Kļūda: serviss palaidās, bet administrācijas autentifikācijas pārbaude neizdevās. Pārbaudiet journalctl -u %s.\n' "$SERVICE_NAME" >&2
+  return 1
 }
 
 main() {
@@ -306,11 +372,12 @@ main() {
     printf 'IP adreses formāts nav derīgs.\n' >&2
     exit 1
   fi
-  admin_password="$(read_admin_password)"
+  read_admin_password admin_password
   configure_certificate "$dns_name" "$ip_address"
   write_configuration "$admin_password" "$company_name"
-  unset admin_password
   install_service
+  verify_admin_login "$dns_name" "$admin_password"
+  unset admin_password
 
   printf '\nInstalācija pabeigta. Servisa statuss:\n'
   systemctl --no-pager --full status "$SERVICE_NAME"
@@ -319,4 +386,6 @@ main() {
   printf 'Pirms Surface nodošanas pārbaudiet sertifikāta uzticamību, kameras atļauju un pilnu reģistrācijas plūsmu.\n'
 }
 
-main
+if [[ "$script_invoked_directly" == true ]]; then
+  main
+fi
