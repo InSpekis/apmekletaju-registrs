@@ -14,6 +14,26 @@ Nepieciešams:
 
 Piemērā tiek izmantots servera nosaukums `registry.example.local`, IP `192.168.100.198` un lietotājs `visitorregistry`. Aizstājiet tos ar saviem faktiskajiem parametriem.
 
+## Ātrā instalācija ar interaktīvo instalatoru
+
+Debian vai Ubuntu serverī no iegūtās programmas mapes izpildiet:
+
+```bash
+sudo bash scripts/install-server.sh
+```
+
+Instalators pirms darbu sākšanas pārbauda `Python 3.11+`, `OpenSSL`, `systemd`, `curl` un `tar`. Ja kāda pakotne trūkst, tas nosauc pakotnes un prasa apstiprinājumu, pirms izmanto `apt-get` to uzstādīšanai. Instalators neveic neatgriezeniskas izmaiņas bez apstiprinājuma; esošu programmu vai HTTPS sertifikātu tas aizstāj tikai pēc atsevišķa jautājuma.
+
+Administrācijas parole tiek ievadīta divreiz bez rakstzīmju attēlošanas. Tā netiek nodota kā komandrindas parametrs un instalēšanas laikā netiek izvadīta terminālī. Pēc tam tā tiek glabāta tikai servera konfigurācijas failā `/etc/visitor-registry/visitor-registry.env` ar piekļuvi `root` un `visitorregistry` grupai. Nelietojiet instalatoru ar `bash -x`, nelīmējiet paroli biļetēs vai čatā un pēc pirmās pieslēgšanās nomainiet paroli, ja tā varēja būt atklāta.
+
+Instalators jautā arī pārziņa juridisko nosaukumu, servera DNS vārdu un izvēlēto HTTPS sertifikāta veidu.
+
+- **Uzņēmuma sertifikāts** ir ieteicamais risinājums slēgtam tīklam. Izvēlieties to, ja uzņēmuma iekšējā sertifikātu iestāde vai ierīču pārvaldība (AD/MDM) jau automātiski uztic saknes sertifikātu Surface ierīcēm. Tad sertifikāts nav manuāli jāimportē katrā planšetē.
+- **Let's Encrypt** instalators pieprasa automātiski ar Certbot un ieslēdz tā atjaunošanas taimeri. Tas ir iespējams tikai tad, ja DNS vārds ir publiski atrisināms un Let's Encrypt validācijai no interneta ir pieejams servera TCP 80. ports. Tas nedarbojas ar `localhost`, privātu IP adresi vai tikai iekšējam tīklam pieejamu nosaukumu.
+- **Pašparakstīts testa sertifikāts** tiek izveidots automātiski, tomēr tas jāuztic katrā klienta ierīcē. Tas nav risinājums, ja mērķis ir izvairīties no manuālas sertifikātu uzticēšanas.
+
+Pēc instalācijas atveriet norādīto `https://servera-nosaukums:8443/` adresi un pārbaudiet `sudo systemctl status visitor-registry.service`.
+
 ## 2. Servera lietotājs un programma
 
 Instalējiet pamatpakotnes un izveidojiet lietotāju, kurš drīkst piekļūt tikai šai lietotnei:

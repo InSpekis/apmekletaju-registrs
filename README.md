@@ -7,6 +7,16 @@ Planšetei pielāgots apmeklētāju reģistrs latviešu valodā. Planšete ir ti
 - Pilna servera, HTTPS sertifikātu, systemd, Surface un atjaunināšanas kārtība: [INSTALLATION.md](INSTALLATION.md)
 - Pirms nodošanas ekspluatācijā izlasiet instrukcijas sadaļu **GDPR un personas datu aizsardzība**. Sistēma apstrādā personas kodus, dokumentu datus un fotoattēlus.
 
+## Servera instalācija
+
+Debian/Ubuntu serverī ieteicams izmantot interaktīvo instalatoru:
+
+```bash
+sudo bash scripts/install-server.sh
+```
+
+Tas slēptā ievadē prasa administratora paroli, pārbauda nepieciešamās pakotnes un, tikai pēc apstiprinājuma, instalē trūkstošās pakotnes. Instalatorā izvēlieties uzņēmuma sertifikātu, ja Surface ierīcēm jāuzticas HTTPS bez manuālas sertifikāta importēšanas; Let's Encrypt der tikai publiski sasniedzamam DNS vārdam. Pilna kārtība, sertifikātu nosacījumi un drošības prasības ir [INSTALLATION.md](INSTALLATION.md#ātrā-instalācija-ar-interaktīvo-instalatoru).
+
 ## Iespējas
 
 - jauna apmeklētāja reģistrācija ar vārdu, uzvārdu, personas kodu, pārstāvēto iestādi, dokumentu, apmeklējamo uzņēmumu, kontaktpersonu un vizītes mērķi;
