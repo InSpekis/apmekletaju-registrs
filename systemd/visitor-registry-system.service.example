@@ -1,0 +1,22 @@
+[Unit]
+Description=Apmeklētāju reģistrs
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=visitorregistry
+Group=visitorregistry
+WorkingDirectory=/opt/visitor-registry
+EnvironmentFile=/etc/visitor-registry/visitor-registry.env
+ExecStart=/usr/bin/python3 /opt/visitor-registry/server.py
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/visitor-registry
+
+[Install]
+WantedBy=multi-user.target

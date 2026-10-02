@@ -1,0 +1,12 @@
+{
+  "name": "Apmeklētāju reģistrs",
+  "short_name": "Apmeklējums",
+  "description": "Planšetei paredzēts apmeklētāju reģistrs.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f1f7f5",
+  "theme_color": "#0a6e69",
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

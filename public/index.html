@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="lv">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a6e69" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Apmeklējums" />
+    <title>Apmeklētāju reģistrs</title>
+    <link rel="manifest" href="/manifest.webmanifest?v=11" />
+    <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/icon.svg" />
+    <link rel="stylesheet" href="/styles.css?v=11" />
+  </head>
+  <body class="kiosk-body">
+    <main class="kiosk-shell">
+      <header class="kiosk-header kiosk-compact">
+        <p>Apmeklētāju reģistrācija</p>
+        <button class="icon-button" id="fullscreen-button" type="button" title="Pilnekrāna skats" aria-label="Pilnekrāna skats"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 9V5h4M20 9V5h-4M4 15v4h4M20 15v4h-4" /></svg></button>
+      </header>
+
+      <aside class="privacy-notice" aria-label="Privātuma informācija">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.75 2.95 8.72 7 10 4.05-1.28 7-5.25 7-10V6l-7-3Zm0 6v4m0 3h.01" /></svg>
+        <p><strong>Privātuma paziņojums.</strong> <span id="privacy-summary">Reģistrācijas laikā tiek apstrādāti apmeklējuma dati un uzņemts foto. Datus izmanto tikai apmeklētāju reģistram un drošības vajadzībām, nevis mārketingam vai datu tirdzniecībai.</span> <a href="/privacy" target="_blank" rel="noopener">Pilns paziņojums</a></p>
+      </aside>
+
+      <section class="registration-card" aria-live="polite">
+        <section id="form-panel">
+          <form id="registration-form" novalidate>
+            <div class="form-grid compact-form-grid">
+              <label class="compact-field"><span class="field-label">Personas kods <b aria-label="obligāts lauks">*</b></span><input id="personal-code" name="personalCode" inputmode="numeric" autocomplete="off" maxlength="32" placeholder="010180-12345" required /><small id="lookup-note" class="lookup-note" aria-live="polite"></small></label>
+              <label class="compact-field"><span class="field-label">Vārds <b aria-label="obligāts lauks">*</b></span><input name="firstName" autocomplete="given-name" maxlength="80" required /></label>
+              <label class="compact-field"><span class="field-label">Uzvārds <b aria-label="obligāts lauks">*</b></span><input name="lastName" autocomplete="family-name" maxlength="80" required /></label>
+              <label class="compact-field"><span class="field-label">Uzņēmums / iestāde <b aria-label="obligāts lauks">*</b></span><input name="representedCompany" list="represented-company-options" autocomplete="organization" maxlength="160" required /></label>
+              <label class="compact-field"><span class="field-label">Dokumenta veids <b aria-label="obligāts lauks">*</b></span><input name="documentType" list="document-type-options" maxlength="80" placeholder="Izvēlieties vai ievadiet" required /></label>
+              <label class="compact-field"><span class="field-label">Dokumenta numurs <b aria-label="obligāts lauks">*</b></span><input name="documentNumber" autocomplete="off" maxlength="80" required /></label>
+              <div class="section-divider" aria-hidden="true"></div>
+              <label class="compact-field"><span class="field-label">Apmeklējamais uzņēmums <b aria-label="obligāts lauks">*</b></span><input id="visited-company" name="visitedCompany" list="visited-company-options" maxlength="160" required /></label>
+              <label class="compact-field"><span class="field-label">Persona, pie kuras ieradies <b aria-label="obligāts lauks">*</b></span><input name="hostPerson" list="host-person-options" autocomplete="name" maxlength="120" required /></label>
+              <label class="compact-field full-width"><span class="field-label">Vizītes mērķis <b aria-label="obligāts lauks">*</b></span><input name="visitPurpose" list="visit-purpose-options" maxlength="500" required /></label>
+            </div>
+            <datalist id="represented-company-options"></datalist><datalist id="document-type-options"></datalist><datalist id="visited-company-options"></datalist><datalist id="host-person-options"></datalist><datalist id="visit-purpose-options"></datalist>
+            <p class="form-error" id="registration-error" role="alert"></p>
+            <button class="primary-button submit-button" type="submit"><span>Reģistrēt apmeklējumu</span><span aria-hidden="true">→</span></button>
+          </form>
+        </section>
+
+        <section id="success-panel" class="hidden success-panel">
+          <div class="success-icon" aria-hidden="true">✓</div>
+          <p class="eyebrow">Reģistrācija pabeigta</p>
+          <h1>Apmeklējums ir reģistrēts.</h1>
+          <p id="success-time" class="lead"></p>
+          <div class="registration-code-box"><span>Reģistrēts ar personas kodu</span><strong id="success-personal-code"></strong><small>Nākamā reģistrācijas veidlapa tiks atvērta automātiski.</small></div>
+          <section class="success-privacy" aria-labelledby="success-privacy-title">
+            <h2 id="success-privacy-title">Privātuma paziņojums</h2>
+            <div id="success-privacy" class="privacy-details"></div>
+          </section>
+        </section>
+      </section>
+
+    </main>
+    <script src="/app.js?v=11"></script>
+  </body>
+</html>

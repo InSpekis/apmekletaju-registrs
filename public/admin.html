@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="lv">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0a6e69" />
+    <title>Apmeklētāju reģistrs — administrācija</title>
+    <link rel="stylesheet" href="/styles.css?v=11" />
+  </head>
+  <body class="admin-body">
+    <main class="admin-shell">
+      <section class="login-card" id="login-view">
+        <span class="brand-mark" aria-hidden="true">A</span>
+        <p class="eyebrow">Apmeklētāju reģistrs</p>
+        <h1>Administrācijas panelis</h1>
+        <p class="lead">Piesakieties, lai skatītu un eksportētu apmeklējumu atskaites.</p>
+        <form id="login-form">
+          <label for="admin-password">Parole</label>
+          <input id="admin-password" type="password" autocomplete="current-password" required />
+          <p class="form-error" id="login-error" role="alert"></p>
+          <button class="primary-button" type="submit">Pieteikties</button>
+        </form>
+      </section>
+
+      <section id="dashboard-view" class="hidden">
+        <header class="admin-header">
+          <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">A</span><span>Apmeklētāju reģistrs</span></a>
+          <div class="admin-actions"><a class="text-button" href="/">Reģistrācijas skats</a><button id="logout-button" class="text-button" type="button">Izrakstīties</button></div>
+        </header>
+        <div class="dashboard-title"><div><p class="eyebrow">Administrācija</p><h1>Apmeklējumu atskaites</h1><p id="result-summary" class="lead">Ielādē datus…</p></div></div>
+        <form class="filters" id="filters-form">
+          <label>No datuma<input type="date" id="filter-from" /></label>
+          <label>Līdz datumam<input type="date" id="filter-to" /></label>
+          <label class="search-filter">Meklēt pēc vārda, uzņēmuma, personas vai numura<input type="search" id="filter-search" placeholder="Meklēt…" /></label>
+          <button class="secondary-button" type="submit">Atlasīt</button>
+          <a class="primary-button export-button" id="export-link" href="/api/admin/export.csv">Eksportēt CSV</a>
+          <a class="secondary-button export-button" id="export-photo-link" href="/api/admin/export.zip">CSV + foto (ZIP)</a>
+        </form>
+        <p class="form-error" id="dashboard-error" role="alert"></p>
+        <div class="table-wrap"><table><thead><tr><th>Laiks</th><th>Apmeklētājs</th><th>Uzņēmums / iestāde</th><th>Dokuments</th><th>Apmeklējums</th><th>Foto</th><th aria-label="Darbības"></th></tr></thead><tbody id="visits-body"></tbody></table></div>
+        <section class="options-card" aria-labelledby="options-title">
+          <div><p class="eyebrow">Veidlapas iestatījumi</p><h2 id="options-title">Ātrās izvēlnes</h2><p class="options-intro">Pievienojiet bieži izmantotas vērtības. Tās būs pieejamas apmeklētāju veidlapas izvēlnēs, bet apmeklētājs varēs ievadīt arī citu vērtību.</p></div>
+          <form id="option-form" class="option-form">
+            <label>Lauks<select id="option-field" required><option value="representedCompany">Uzņēmums / iestāde</option><option value="documentType">Dokumenta veids</option><option value="visitedCompany">Apmeklējamais uzņēmums</option><option value="hostPerson">Persona, pie kuras ieradies</option><option value="visitPurpose">Vizītes mērķis</option></select></label>
+            <label class="option-value-label">Jauna vērtība<input id="option-value" maxlength="160" required placeholder="Ievadiet izvēlnes vērtību" /></label>
+            <button class="primary-button" type="submit">Pievienot</button>
+          </form>
+          <p class="form-error" id="option-error" role="alert"></p>
+          <div id="option-groups" class="option-groups"></div>
+        </section>
+        <section class="camera-setup-card" aria-labelledby="camera-setup-title">
+          <div><p class="eyebrow">Planšetes iestatīšana</p><h2 id="camera-setup-title">Kameras atļauja</h2><p>Šis solis jāveic vienreiz katrā planšetē un pārlūkā. Pēc apstiprināšanas pārlūks saglabā atļauju šai HTTPS adresei, un apmeklētājiem nekas nav jāapstiprina.</p></div>
+          <div class="camera-setup-actions"><button id="camera-setup-button" class="primary-button" type="button">Aktivizēt kameru šajā ierīcē</button><p id="camera-setup-status" role="status"></p></div>
+        </section>
+        <section class="privacy-card" aria-labelledby="privacy-title">
+          <div><p class="eyebrow">Privātums</p><h2 id="privacy-title">Privātuma paziņojums</h2><p class="options-intro">Šī informācija tiek parādīta pirms reģistrācijas, pilnajā paziņojumā un pēc sekmīgas vizītes reģistrācijas.</p></div>
+          <form id="privacy-form" class="privacy-form">
+            <label class="privacy-wide">Īsais paziņojums pirms reģistrācijas<textarea id="privacy-short-notice" maxlength="1200" required></textarea><small>Šis teksts ir redzams apmeklētājam pirms datu ievades. To var mainīt pēc jurista vai normatīvā regulējuma norādēm.</small></label>
+            <label>Pārziņa juridiskais nosaukums<input id="privacy-controller-name" maxlength="200" required /></label>
+            <label>Reģistrācijas numurs <small>(nav obligāts)</small><input id="privacy-controller-registration-number" maxlength="80" /></label>
+            <label>Pārziņa kontaktinformācija<input id="privacy-controller-contact" maxlength="300" placeholder="E-pasts, tālrunis vai adrese" required /></label>
+            <label>Datu aizsardzības speciālista kontakts <small>(ja attiecināms)</small><input id="privacy-dpo-contact" maxlength="300" /></label>
+            <label>Tiesiskais pamats<select id="privacy-legal-basis" required><option value="">Izvēlieties tiesisko pamatu</option><option value="GDPR 6. panta 1. punkta c) apakšpunkts — juridiskais pienākums">GDPR 6(1)(c) — juridiskais pienākums</option><option value="GDPR 6. panta 1. punkta f) apakšpunkts — leģitīmās intereses">GDPR 6(1)(f) — leģitīmās intereses</option><option value="Cits normatīvajos aktos noteikts tiesiskais pamats">Cits tiesiskais pamats</option></select></label>
+            <label>Tiesiskā pamata atsauce<input id="privacy-legal-basis-details" maxlength="500" placeholder="Normatīvais akts, pants vai pienākums" required /></label>
+            <label class="privacy-wide">Apstrādes mērķis<textarea id="privacy-processing-purpose" maxlength="600" required></textarea></label>
+            <label class="privacy-wide">Datu saņēmēji<textarea id="privacy-recipients" maxlength="600" required placeholder="Norādiet saņēmējus un nodošanas kārtību"></textarea></label>
+            <label>Glabāšanas termiņš (mēneši)<input id="privacy-retention-months" type="number" min="1" max="120" value="6" required /></label>
+            <label>Glabāšanas informācija<input id="privacy-storage-description" maxlength="600" placeholder="Piemēram, lokāls serveris, piekļuve ierobežota" required /></label>
+            <label>Laiks līdz jaunai reģistrācijai (sek.)<input id="privacy-next-registration-seconds" type="number" min="1" max="3600" value="5" required /></label>
+            <label>Privātuma paziņojuma lasīšanas laiks (sek.)<input id="privacy-reading-seconds" type="number" min="1" max="3600" value="60" required /></label>
+            <button class="primary-button privacy-save" type="submit">Saglabāt privātuma paziņojumu</button>
+          </form>
+          <p class="form-error" id="privacy-error" role="alert"></p><p class="privacy-status" id="privacy-status" role="status"></p>
+        </section>
+      </section>
+    </main>
+    <script src="/admin.js?v=11"></script>
+  </body>
+</html>
